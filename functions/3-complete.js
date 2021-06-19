@@ -12,6 +12,34 @@ const headers = {
 };
 
 exports.handler = async (event, context) => {
+	const { id } = event.queryStringParameters;
+	if (id) {
+		try {
+			const product = await airtable.retrieve(id);
+
+			if (product.error) {
+				return { headers, statusCode: 404, body: `No product with ID: ${id}` };
+			}
+
+			const { name, description, image, price } = product.fields;
+
+			const formattedProduct = {
+				id,
+				name,
+				description,
+				url: image[0].url,
+				price,
+			};
+
+			return {
+				headers,
+				statusCode: 200,
+				body: JSON.stringify(formattedProduct),
+			};
+		} catch (error) {
+			return { headers, statusCode: 500, body: 'Server Error' };
+		}
+	}
 	try {
 		const { records } = await airtable.list();
 		const products = records.map((product) => {
